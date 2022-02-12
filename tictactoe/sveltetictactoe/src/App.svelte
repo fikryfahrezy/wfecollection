@@ -1,49 +1,6 @@
 <script>
   import Board from "./lib/Board.svelte";
-
-  const resultBuilder = function resultBuilder(a) {
-    if (a < 3) {
-      return { row: 0, column: a };
-    }
-    if (a >= 3 && a < 6) {
-      return { row: 1, column: a % 3 };
-    }
-    if (a >= 6 && a < 9) {
-      return { row: 2, column: a % 3 };
-    }
-
-    return { row: 0, column: 0 };
-  };
-
-  const calculateWinner = function calculateWinner(nestedSquares) {
-    const lines = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6],
-    ];
-
-    const squares = nestedSquares
-      .map((v) => v.value)
-      .flat()
-      .map((v) => v.value);
-
-    for (let i = 0; i < lines.length; i++) {
-      const [a, b, c] = lines[i];
-      if (
-        squares[a] &&
-        squares[a] === squares[b] &&
-        squares[a] === squares[c]
-      ) {
-        return lines[i];
-      }
-    }
-    return null;
-  };
+  import { calculateWinner, resultBuilder } from "tictactoe-bot";
 
   let state = {
     history: [
@@ -70,7 +27,10 @@
     const current = history[history.length - 1];
 
     const squares = JSON.parse(JSON.stringify(current.squares));
-    if (calculateWinner(squares) || squares[i].value[j].value) {
+    const currSquares = squares.map((square) =>
+      square.value.map((sv) => (sv.value ? sv.value : ""))
+    );
+    if (calculateWinner(currSquares) || squares[i].value[j].value) {
       return;
     }
 
@@ -105,7 +65,11 @@
   $: current = history[state.stepNumber];
   $: moves = history.map((step, move) => step);
 
-  $: winner = calculateWinner(current.squares);
+  $: winner = calculateWinner(
+    current.squares.map((square) =>
+      square.value.map((sv) => (sv.value ? sv.value : ""))
+    )
+  );
   $: winnerCoord = winner ? winner.map((v) => resultBuilder(v)) : [];
   $: status = ((winner, winnerCoord) => {
     if (winnerCoord && winnerCoord.length === 0 && history.length === 10) {
